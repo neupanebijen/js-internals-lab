@@ -44,9 +44,6 @@ const delimitersOperator = [
   "%",
 ]
 
-// const isDelimiterSkip = (char) => delimitersSkip.includes(char)
-// const isDelimiterOperator = (char) => delimitersOperator.includes(char)
-
 const delimitCode = (code) => {
   let delimitedCode = []
   let currentCode = ""
