@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <title>JavaScript Lexer Experiment</title>
+  </head>
+  <body>
+    <h1>Enter you js code.</h1>
+    <form id="codeForm" onsubmit="handleCodeSubmit(event)">
+      <label for="codeEntry" style="display: block; margin-bottom: 10px">
+        Enter your script:
+      </label>
+
+      <textarea
+        id="codeEntry"
+        name="userCode"
+        spellcheck="false"
+        style="font-family: monospace; width: 100%; height: 150px"
+        placeholder="Write your code here..."
+        style="tab-size: 4; white-space: pre"
+        required
+      ></textarea>
+
+      <br />
+
+      <button type="submit" style="margin-top: 10px; padding: 10px 20px">
+        Run Code
+      </button>
+    </form>
+    <script src="index.js"></script>
+  </body>
+</html>
