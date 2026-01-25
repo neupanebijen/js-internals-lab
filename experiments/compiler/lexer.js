@@ -1,17 +1,3 @@
-// This is the start of the lexer
-console.log("Lexer Started")
-
-const codeForm = document.getElementById("codeForm")
-
-const handleCodeSubmit = (e) => {
-  e.preventDefault()
-
-  const code = document.getElementById("codeEntry").value
-  const lexemes = delimitCode(code)
-  const tokens = tokenize(lexemes)
-  console.log("Delimited Code is: ", tokens)
-}
-
 // delimiters
 const delimiters = {
   whitespace: [" ", "\n", "\t"], // Characters we truly want to throw away
@@ -20,7 +6,7 @@ const delimiters = {
 }
 
 // Delimiter
-const delimitCode = (code) => {
+export const delimitCode = (code) => {
   let codeArray = []
   let currentCode = ""
   let inString = false
@@ -112,6 +98,81 @@ const delimitCode = (code) => {
 // if the delimiter is not a skip delimiter
 // add it to the codeArray
 
+// Delimit code written agian
+
+export const delimitCode2 = (code) => {
+  let codeArray = []
+  let currentCode = ""
+  let inString = false
+
+  for (let i = 0; i < code.length; i++) {
+    let char = code[i]
+    let nextchar = code[i + 1]
+
+    if (char === '"') {
+      currentCode += char
+      if (inString) {
+        codeArray.push(currentCode)
+        currentCode = ""
+        inString = false
+      } else {
+        inString = true
+      }
+      continue
+    }
+
+    if (inString) {
+      currentCode += char
+      continue
+    }
+
+    // Loop only moves till this point if there is no ending '"'
+
+    const isWhiteSpace = delimiters.whitespace.includes(char)
+    const isSyntax = delimiters.syntax.includes(char)
+    const isOp = delimiters.operator.includes(char)
+
+    // Flush if anything other than normal letters
+    if (isWhiteSpace || isSyntax || isOp) {
+      if (currentCode) {
+        codeArray.push(currentCode)
+        currentCode = ""
+      }
+    }
+
+    if (isOp) {
+      if (
+        (char === "=" && nextchar === "=") ||
+        (char === "+" && nextchar === "+") ||
+        (char === "!" && nextchar === "=") ||
+        (char === "&" && nextchar === "&") ||
+        (char === "|" && nextchar === "|")
+      ) {
+        if (char === "=" && nextchar === "=" && code[i + 2] === "=") {
+          codeArray.push("===")
+          i += 2
+        } else {
+          codeArray.push(char)
+        }
+        continue
+      }
+    }
+
+    if (isSyntax) {
+      codeArray.push(char)
+      continue
+    }
+
+    if (isWhiteSpace) {
+      continue
+    }
+
+    currentCode += char
+  }
+
+  if (currentCode) codeArray.push(currentCode)
+}
+
 // Tokens:
 const keywords = [
   "const",
@@ -125,7 +186,7 @@ const keywords = [
   "false",
 ]
 
-const tokenize = (lexemes) => {
+export const tokenize = (lexemes) => {
   return lexemes.map((lexeme) => {
     if (keywords.includes(lexeme)) {
       return { type: "KEYWORD", value: lexeme }
