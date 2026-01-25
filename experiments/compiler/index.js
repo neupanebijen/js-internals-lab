@@ -1,16 +1,24 @@
 import { delimitCode, tokenize } from "./lexer.js"
+import Parser from "./parser.js"
 
-// This is the start of the lexer
-console.log("Lexer Started")
+console.log("Compiler Started")
 
 const codeForm = document.getElementById("codeForm")
 
 const handleCodeSubmit = (e) => {
   e.preventDefault()
+  try {
+    const code = document.getElementById("codeEntry").value
+    const lexemes = delimitCode(code)
+    const tokens = tokenize(lexemes)
 
-  const code = document.getElementById("codeEntry").value
-  const lexemes = delimitCode(code)
-  const tokens = tokenize(lexemes)
+    const parser = new Parser(tokens)
+    const ast = parser.parse()
 
-  console.log("Delimited Code is: ", tokens)
+    console.log("Parsed code is: ", ast)
+  } catch (e) {
+    console.error("Compilation failed", e.message)
+  }
 }
+
+codeForm.addEventListener("submit", handleCodeSubmit)

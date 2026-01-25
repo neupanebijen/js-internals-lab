@@ -30,3 +30,4 @@ function TestFunction(self) {
 TestFunction(false)
 
 export default TestFunction
+// WTF moment? Modules are deferred by default. Modules are loaded asynchronously
