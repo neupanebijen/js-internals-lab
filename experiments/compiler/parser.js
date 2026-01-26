@@ -1,9 +1,10 @@
 // I did copy it without looking, but the logic for parseVariable declaration was taken from the AI.
-
+import SymbolTable from "./symbolTable.js"
 export default class Parser {
   constructor(tokens) {
     this.tokens = tokens
     this.cursor = 0
+    this.symbolTable = new SymbolTable()
   }
 
   // Return the token at the current cursor value
@@ -43,6 +44,13 @@ export default class Parser {
     const token = this.peek() // get the token at the current cursor position
 
     if (!token) return null
+
+    // handle {} blocks
+
+    if (token.type === "PUNCTUATION" && token.value === "{") {
+      return this.parseBlock()
+    }
+
     // If this starts with a keywords, it's a likely declaration
     if (
       token.type === "KEYWORD" &&
@@ -54,12 +62,41 @@ export default class Parser {
     this.consume()
   }
 
-  // This function is a real **** magic. Just consume and cursor moves forward. The brilliance to create such simplicity.
+  parseBlock() {
+    this.expect("PUNCTUATION", "Expected '{' to start block")
+
+    // Enter new scope
+    this.symbolTable.pushScope()
+
+    const body = []
+
+    // keep parsing statements until we hit '}'
+    while (this.peek() && this.peek().value !== "}") {
+      const statement = this.parseStatement()
+      if (statement) body.push(statement)
+    }
+
+    //leave the scope
+    this.symbolTable.popScope()
+
+    this.expect("PUNCTUATION", "Expected '}' to end block")
+
+    return {
+      type: "BlockStatement",
+      body: body,
+    }
+  }
+
+  // This function is a real magic. Just consume and cursor moves forward. The brilliance to create such simplicity.
   parseVariableDeclaration() {
     const kind = this.consume().value // consume called. But what does .value() behind the consume do?
     const id = this.expect("IDENTIFIER", "Expected variable name").value
+
+    this.symbolTable.define(id, { kind: kind, initialized: true })
+
     this.expect("OPERATOR", "Expected '=' after variable name")
-    const val = this.expect("NUMBER", "Expected number value").value
+
+    const val = this.parseExpression()
     this.expect("PUNCTUATION", "Expected ';' at the end of line")
 
     return {
@@ -68,5 +105,68 @@ export default class Parser {
       identifier: id,
       value: val,
     }
+  }
+  // Test : 5+5(5/5)
+  parseExpression() {
+    let left = this.parseTerm()
+
+    while (
+      this.peek() && // important to check if the statement is already parsed
+      (this.peek().value === "+" || this.peek().value === "-")
+    ) {
+      const operator = this.consume().value
+      const right = this.parseTerm()
+
+      left = {
+        type: "BinaryExpression",
+        operator: operator,
+        left: left,
+        right: right,
+      }
+    }
+    return left
+  }
+
+  parseTerm() {
+    let left = this.parseFactor()
+
+    while (
+      this.peek() &&
+      (this.peek().value === "*" || this.peek().value === "/")
+    ) {
+      const operator = this.consume().value
+      const right = this.parseFactor()
+
+      left = {
+        type: "BinaryExpression",
+        operator: operator,
+        left: left,
+        right: right,
+      }
+    }
+    return left
+  }
+
+  parseFactor() {
+    const token = this.peek() // gives the current token?
+
+    if (token.type === "NUMBER") {
+      return { type: "Literal", value: this.consume().value }
+    }
+
+    if (token.type === "IDENTIFIER") {
+      return { type: "Identifier", name: this.consume().value }
+    }
+
+    if (token.value === "(") {
+      this.consume()
+      const expression = this.parseExpression()
+      this.expect("PUNCTUATION", "Expected ')' to close expression")
+
+      if (this.peek().value !== ")") throw new Error("Expected ')'")
+      this.consume()
+      return expression
+    }
+    throw new Error(`Unexpected token in expression: ${token.value}`)
   }
 }
