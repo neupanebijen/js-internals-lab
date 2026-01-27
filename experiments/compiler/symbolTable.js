@@ -1,6 +1,7 @@
 export default class SymbolTable {
   constructor() {
     this.scopes = [{}]
+    console.log("Symbol Table constructor called")
   }
 
   pushScope() {
@@ -27,10 +28,20 @@ export default class SymbolTable {
     currentScope[name] = metadata
   }
 
+  assign(name, metadata) {
+    for (let i = this.scopes.length - 1; i > -1; i--) {
+      if (this.scopes[i].hasOwnProperty(name)) {
+        this.scopes[i][name] = metadata
+        return
+      }
+    }
+    throw new Error(`Could not find ${name}`)
+  }
+
   // Starts from the end of the array to find the scope first. If multiple variable names are repeated accross multiple scopes, the local one is always found first
   lookup(name) {
     for (let i = this.scopes.length - 1; i >= 0; i--) {
-      if (this.scopes[i][name]) {
+      if (Object.prototype.hasOwnProperty.call(this.scopes[i][name])) {
         return this.scopes[i][name]
       }
     }

@@ -1,5 +1,7 @@
 import { delimitCode, tokenize } from "./lexer.js"
 import Parser from "./parser.js"
+import SymbolTable from "./symbolTable.js"
+import Evaluator from "./evaluator.js"
 
 console.log("Compiler Started")
 
@@ -11,11 +13,11 @@ const handleCodeSubmit = (e) => {
     const code = document.getElementById("codeEntry").value
     const lexemes = delimitCode(code)
     const tokens = tokenize(lexemes)
-
     const parser = new Parser(tokens)
     const ast = parser.parse()
 
-    console.log("Parsed code is: ", ast)
+    const evaluator = new Evaluator()
+    return evaluator.evaluate(ast, parser.symbolTable)
   } catch (e) {
     console.error("Compilation failed", e.message)
   }
